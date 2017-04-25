@@ -43,12 +43,12 @@ func main() {
 	log.Info("Connect to DB")
 	config, err := pgconn.NewEnvConfig()
 	if err != nil {
-		log.Warnf("Failed environment init: %s", err.Error())
+		log.Fatalf("Failed environment init: %s", err.Error())
 	}
 
-	postgressConnection,err := pgconn.OpenAndConnect(config.ConnectString(),1)
+	postgressConnection,err := pgconn.OpenAndConnect(config.ConnectString(),100)
 	if err != nil {
-		log.Warnf("Failed environment init: %s", err.Error())
+		log.Fatalf("Failed environment init: %s", err.Error())
 	}
 
 	log.Info("Create session")
