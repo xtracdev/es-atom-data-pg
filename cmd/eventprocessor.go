@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 	"github.com/xtracdev/ecs-atom-data"
+	"github.com/xtracdev/pgconn"
 )
 
 const (
@@ -39,6 +40,17 @@ func SNSMessageFromRawMessage(raw string) (*SNSMessage, error) {
 }
 
 func main() {
+	log.Info("Connect to DB")
+	config, err := pgconn.NewEnvConfig()
+	if err != nil {
+		log.Warnf("Failed environment init: %s", err.Error())
+	}
+
+	postgressConnection,err := pgconn.OpenAndConnect(config.ConnectString(),1)
+	if err != nil {
+		log.Warnf("Failed environment init: %s", err.Error())
+	}
+
 	log.Info("Create session")
 	session, err := session.NewSession()
 	if err != nil {
@@ -54,7 +66,7 @@ func main() {
 		WaitTimeSeconds:     aws.Int64(10),
 	}
 
-	atomDataProcessor = ecsatomdata.NewAtomDataProcessor(nil)
+	atomDataProcessor = ecsatomdata.NewAtomDataProcessor(postgressConnection.DB)
 
 	log.Info("Process messages")
 	for {
