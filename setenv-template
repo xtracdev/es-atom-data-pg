@@ -1,0 +1,9 @@
+export http_proxy=
+export AWS_PROFILE=
+export AWS_REGION=
+export EVENT_QUEUE_URL=
+export DB_USER=
+export DB_PASSWORD=
+export DB_HOST=
+export DB_PORT=
+export DB_NAME=
