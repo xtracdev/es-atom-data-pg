@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"os"
 	"time"
+	"github.com/xtracdev/ecs-atom-data"
 )
 
 const (
@@ -16,6 +17,7 @@ const (
 
 var (
 	queueURL string
+	atomDataProcessor *ecsatomdata.AtomDataProcessor
 )
 
 func init() {
@@ -52,6 +54,8 @@ func main() {
 		WaitTimeSeconds:     aws.Int64(10),
 	}
 
+	atomDataProcessor = ecsatomdata.NewAtomDataProcessor(nil)
+
 	log.Info("Process messages")
 	for {
 		log.Info("Receieve message")
@@ -73,9 +77,11 @@ func main() {
 		sns, err := SNSMessageFromRawMessage(*message.Body)
 		if err != nil {
 			log.Warn(err.Error())
-		} else {
-			log.Info(sns.Message)
+			errorDelay()
+			continue
 		}
+
+		atomDataProcessor.ProcessMessage(sns.Message)
 
 		log.Info("Delete message")
 
