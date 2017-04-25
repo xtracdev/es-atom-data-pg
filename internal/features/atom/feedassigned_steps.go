@@ -5,7 +5,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
-	ad "github.com/xtracdev/ecs-atom-data"
+	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
 	"os"
 	"github.com/xtracdev/pgconn"

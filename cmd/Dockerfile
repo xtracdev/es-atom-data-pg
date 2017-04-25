@@ -1,4 +1,4 @@
 FROM xtracdev/scratchy
 
-COPY ecsatomdata /opt/
-CMD ["/opt/ecsatomdata"]
+COPY esatomdatapg /opt/
+CMD ["/opt/esatomdatapg"]

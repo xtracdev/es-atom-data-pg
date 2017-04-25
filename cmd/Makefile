@@ -1,6 +1,6 @@
 container:
-	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o ecsatomdata
-	docker build -t xtracdev/ecsatomdata:latest .
+	GOOS=linux GOARCH=386 CGO_ENABLED=0 go build -o esatomdatapg
+	docker build -t xtracdev/esatomdatapg:latest .
 
 clean:
-	rm -f ecsatomdata
+	rm -f esatomdatapg

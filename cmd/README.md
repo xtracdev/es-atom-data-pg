@@ -7,5 +7,5 @@ docker run -e DB_USER=$DB_USER --link mypg:postgres -e DB_PASSWORD=$DB_PASSWORD 
 -e http_proxy=$http_proxy \
 -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY \
 -e EVENT_QUEUE_URL=$EVENT_QUEUE_URL \
--e AWS_REGION=$AWS_REGION xtracdev/ecsatomdata
+-e AWS_REGION=$AWS_REGION xtracdev/esatomdatapg
 </pre>

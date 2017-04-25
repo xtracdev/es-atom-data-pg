@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"os"
 	"time"
-	"github.com/xtracdev/ecs-atom-data"
+	"github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/pgconn"
 )
 
@@ -18,7 +18,7 @@ const (
 
 var (
 	queueURL string
-	atomDataProcessor *ecsatomdata.AtomDataProcessor
+	atomDataProcessor *esatomdatapg.AtomDataProcessor
 )
 
 func init() {
@@ -66,7 +66,7 @@ func main() {
 		WaitTimeSeconds:     aws.Int64(10),
 	}
 
-	atomDataProcessor = ecsatomdata.NewAtomDataProcessor(postgressConnection.DB)
+	atomDataProcessor = esatomdatapg.NewAtomDataProcessor(postgressConnection.DB)
 
 	log.Info("Process messages")
 	for {

@@ -1,4 +1,4 @@
-package ecsatomdata
+package esatomdatapg
 
 import (
 	log "github.com/Sirupsen/logrus"

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
-	ad "github.com/xtracdev/ecs-atom-data"
+	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
 	log "github.com/Sirupsen/logrus"
 	"github.com/xtracdev/pgconn"
