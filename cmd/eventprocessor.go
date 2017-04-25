@@ -1,11 +1,12 @@
 package main
 
 import (
-	"github.com/aws/aws-sdk-go/aws/session"
+	"encoding/json"
 	log "github.com/Sirupsen/logrus"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"os"
-	"github.com/aws/aws-sdk-go/aws"
 	"time"
 )
 
@@ -25,6 +26,16 @@ func errorDelay() {
 	time.Sleep(5 * time.Second)
 }
 
+type SNSMessage struct {
+	Message string
+}
+
+func SNSMessageFromRawMessage(raw string) (*SNSMessage, error) {
+	var snsMessage SNSMessage
+	err := json.Unmarshal([]byte(raw), &snsMessage)
+	return &snsMessage, err
+}
+
 func main() {
 	log.Info("Create session")
 	session, err := session.NewSession()
@@ -35,10 +46,10 @@ func main() {
 	svc := sqs.New(session)
 
 	params := &sqs.ReceiveMessageInput{
-		QueueUrl: aws.String(queueURL), // Required
+		QueueUrl:            aws.String(queueURL), // Required
 		MaxNumberOfMessages: aws.Int64(1),
-		VisibilityTimeout:       aws.Int64(10),
-		WaitTimeSeconds:         aws.Int64(10),
+		VisibilityTimeout:   aws.Int64(10),
+		WaitTimeSeconds:     aws.Int64(10),
 	}
 
 	log.Info("Process messages")
@@ -56,8 +67,15 @@ func main() {
 			continue
 		}
 
-		message := messages[0]
+		message := *messages[0]
 		log.Infof("Message: %v", message)
+
+		sns, err := SNSMessageFromRawMessage(*message.Body)
+		if err != nil {
+			log.Warn(err.Error())
+		} else {
+			log.Info(sns.Message)
+		}
 
 		log.Info("Delete message")
 
@@ -69,7 +87,5 @@ func main() {
 		if err != nil {
 			log.Warnf("Error deleting message: %s", err.Error())
 		}
-
-
 	}
 }
