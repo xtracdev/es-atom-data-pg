@@ -1,12 +1,12 @@
 package esatomdatapg
 
 import (
-	"database/sql"
-	log "github.com/Sirupsen/logrus"
-	"github.com/xtracdev/pgpublish"
-	"github.com/xtracdev/goes"
-	"fmt"
 	"crypto/rand"
+	"database/sql"
+	"fmt"
+	log "github.com/Sirupsen/logrus"
+	"github.com/xtracdev/goes"
+	"github.com/xtracdev/pgpublish"
 	"os"
 	"strconv"
 )
@@ -15,7 +15,7 @@ const (
 	sqlLatestFeedId        = `select feedid from t_aefd_feed where id = (select max(id) from t_aefd_feed)`
 	sqlInsertEventIntoFeed = `insert into t_aeae_atom_event (aggregate_id, version,typecode, payload) values($1,$2,$3,$4)`
 	sqlRecentFeedCount     = `select count(*) from t_aeae_atom_event where feedid is null`
-	defaultFeedThreshold = 100
+	defaultFeedThreshold   = 100
 	sqlUpdateFeedIds       = `update t_aeae_atom_event set feedid = $1 where feedid is null`
 	sqlInsertFeed          = `insert into t_aefd_feed (feedid, previous) values ($1, $2)`
 )
@@ -28,12 +28,12 @@ type AtomDataProcessor struct {
 
 func NewAtomDataProcessor(db *sql.DB) *AtomDataProcessor {
 	return &AtomDataProcessor{
-		db:db,
+		db: db,
 	}
 }
 
 func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
-	log.Infof("process message %s", msg)
+	log.Debugf("process message %s", msg)
 
 	var aggId, typecode string
 	var version int
@@ -45,10 +45,10 @@ func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
 		return err
 	}
 
-	event := goes.Event {
-		Source:aggId,
-		Version:version,
-		Payload: payload,
+	event := goes.Event{
+		Source:   aggId,
+		Version:  version,
+		Payload:  payload,
 		TypeCode: typecode,
 	}
 
@@ -128,7 +128,6 @@ func ReadFeedThresholdFromEnv() {
 	}
 }
 
-
 func createNewFeed(tx *sql.Tx, currentFeedId sql.NullString) error {
 	log.Infof("Feed threshold of %d met", FeedThreshold)
 	var prevFeedId sql.NullString
@@ -158,7 +157,7 @@ func createNewFeed(tx *sql.Tx, currentFeedId sql.NullString) error {
 }
 
 func (adp *AtomDataProcessor) processEvent(event *goes.Event) error {
-	log.Infof("process events: %v", event)
+	log.Debugf("process event: %v", event)
 
 	log.Debug("Processor invoked")
 

@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
-	"os"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
+	"os"
 )
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 		initFailed = true
 	}
 
-	db,err := pgconn.OpenAndConnect(config.ConnectString(),1)
+	db, err := pgconn.OpenAndConnect(config.ConnectString(), 1)
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
@@ -54,7 +54,7 @@ func init() {
 			Payload:  []byte("ok"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
@@ -76,7 +76,7 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 	})
@@ -140,7 +140,7 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
@@ -151,13 +151,13 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent = pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		encodedEvent = pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
 		event, err := ad.RetrieveEvent(db.DB, eventPtr.Source, eventPtr.Version)
-		if assert.Nil(T,err) {
-			log.Infof("event is %+v",event)
+		if assert.Nil(T, err) {
+			log.Infof("event is %+v", event)
 		}
 	})
 

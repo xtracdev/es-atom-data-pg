@@ -6,20 +6,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"os"
-	"time"
 	"github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
+	"os"
+	"time"
 )
 
 const (
 	QueueUrlEnv = "EVENT_QUEUE_URL"
-	LogLevel="PG_ATOMDATA_LOG_LEVEL"
+	LogLevel    = "PG_ATOMDATA_LOG_LEVEL"
 )
 
 var (
-	queueURL string
+	queueURL          string
 	atomDataProcessor *esatomdatapg.AtomDataProcessor
 )
 
@@ -55,7 +55,7 @@ func main() {
 		log.Fatalf("Failed environment init: %s", err.Error())
 	}
 
-	postgressConnection,err := pgconn.OpenAndConnect(config.ConnectString(),100)
+	postgressConnection, err := pgconn.OpenAndConnect(config.ConnectString(), 100)
 	if err != nil {
 		log.Fatalf("Failed environment init: %s", err.Error())
 	}
@@ -79,7 +79,7 @@ func main() {
 
 	log.Info("Process messages")
 	for {
-		log.Info("Receieve message")
+		log.Debug("Receieve message")
 		resp, err := svc.ReceiveMessage(params)
 		if err != nil {
 			log.Warnf("Error receieving message: %s", err.Error())
@@ -93,7 +93,7 @@ func main() {
 		}
 
 		message := *messages[0]
-		log.Infof("Message: %v", message)
+		log.Debugf("Message: %v", message)
 
 		sns, err := SNSMessageFromRawMessage(*message.Body)
 		if err != nil {
@@ -102,9 +102,13 @@ func main() {
 			continue
 		}
 
-		atomDataProcessor.ProcessMessage(sns.Message)
+		err = atomDataProcessor.ProcessMessage(sns.Message)
+		if err != nil {
+			log.Warnf("Error processing message: %s", err.Error())
+			continue
+		}
 
-		log.Info("Delete message")
+		log.Debug("Delete message")
 
 		params := &sqs.DeleteMessageInput{
 			QueueUrl:      aws.String(queueURL),

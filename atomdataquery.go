@@ -2,8 +2,8 @@ package esatomdatapg
 
 import (
 	"database/sql"
-	"time"
 	"github.com/xtracdev/goes"
+	"time"
 )
 
 const (
