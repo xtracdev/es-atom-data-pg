@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	log "github.com/Sirupsen/logrus"
+	"github.com/armon/go-metrics"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -10,21 +11,48 @@ import (
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 	"os"
+	"syscall"
 	"time"
 )
 
 const (
-	QueueUrlEnv = "EVENT_QUEUE_URL"
-	LogLevel    = "PG_ATOMDATA_LOG_LEVEL"
+	QueueUrlEnv         = "EVENT_QUEUE_URL"
+	LogLevel            = "PG_ATOMDATA_LOG_LEVEL"
+	MetricsDumpInterval = 1 * time.Minute
 )
 
 var (
 	queueURL          string
 	atomDataProcessor *esatomdatapg.AtomDataProcessor
+	metricsSink       = metrics.NewInmemSink(MetricsDumpInterval, 2*MetricsDumpInterval)
+	signal            = metrics.DefaultInmemSignal(metricsSink)
+	errorCounter      = []string{"errors"}
+	messagesReceived  = []string{"messages_received"}
+	messagesProcessed = []string{"messages_processed"}
+	messagesDeleted   = []string{"messages_deleted"}
+	processingTime    = []string{"processing_time"}
 )
 
 func init() {
+	//Grab queue url
 	queueURL = os.Getenv(QueueUrlEnv)
+
+	//Initialize metrics library, kick of metrics dump go routine.
+	metrics.NewGlobal(metrics.DefaultConfig("pgpublish"), metricsSink)
+	pid := syscall.Getpid()
+	log.Infof("Using %d for signal pid", pid)
+	go func() {
+		c := time.Tick(MetricsDumpInterval)
+		for range c {
+			//Signal self to dump metrics to stdout
+			syscall.Kill(pid, metrics.DefaultSignal)
+		}
+	}()
+}
+
+func warnErrorf(format string, args ...interface{}) {
+	metricsSink.IncrCounter(errorCounter, 1)
+	log.Warnf(format, args)
 }
 
 func errorDelay() {
@@ -82,7 +110,7 @@ func main() {
 		log.Debug("Receieve message")
 		resp, err := svc.ReceiveMessage(params)
 		if err != nil {
-			log.Warnf("Error receieving message: %s", err.Error())
+			warnErrorf("Error receieving message: %s", err.Error())
 			errorDelay()
 			continue
 		}
@@ -92,21 +120,28 @@ func main() {
 			continue
 		}
 
+		metricsSink.IncrCounter(messagesReceived, 1)
+
 		message := *messages[0]
 		log.Debugf("Message: %v", message)
 
 		sns, err := SNSMessageFromRawMessage(*message.Body)
 		if err != nil {
-			log.Warn(err.Error())
+			warnErrorf(err.Error())
 			errorDelay()
 			continue
 		}
 
+		start := time.Now()
 		err = atomDataProcessor.ProcessMessage(sns.Message)
 		if err != nil {
-			log.Warnf("Error processing message: %s", err.Error())
+			warnErrorf("Error processing message: %s", err.Error())
 			continue
 		}
+		stop := time.Now()
+
+		metricsSink.IncrCounter(messagesProcessed, 1)
+		metrics.AddSample(processingTime, float32(stop.Sub(start).Nanoseconds()/1000000.0))
 
 		log.Debug("Delete message")
 
@@ -116,7 +151,9 @@ func main() {
 		}
 		_, err = svc.DeleteMessage(params)
 		if err != nil {
-			log.Warnf("Error deleting message: %s", err.Error())
+			warnErrorf("Error deleting message: %s", err.Error())
+		} else {
+			metricsSink.IncrCounter(messagesDeleted, 1)
 		}
 	}
 }
