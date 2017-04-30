@@ -2,11 +2,11 @@ package atom
 
 import (
 	"database/sql"
+	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
 	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
-	log "github.com/Sirupsen/logrus"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 )
@@ -23,12 +23,11 @@ func init() {
 		initFailed = true
 	}
 
-	db,err := pgconn.OpenAndConnect(config.ConnectString(),1)
+	db, err := pgconn.OpenAndConnect(config.ConnectString(), 1)
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
 	}
-
 
 	Given(`^a new feed environment$`, func() {
 
@@ -56,9 +55,9 @@ func init() {
 			TypeCode: "foo",
 			Payload:  []byte("ok"),
 		}
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 		err = atomProcessor.ProcessMessage(encodedEvent)
-		assert.Nil(T,err)
+		assert.Nil(T, err)
 	})
 
 	And(`^the number of events is lower than the feed threshold$`, func() {

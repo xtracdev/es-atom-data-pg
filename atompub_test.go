@@ -1,17 +1,16 @@
 package esatomdatapg
 
 import (
-	log "github.com/Sirupsen/logrus"
-	"github.com/xtracdev/goes"
-	"github.com/stretchr/testify/assert"
-	"testing"
-	"os"
 	"errors"
-	"net"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	log "github.com/Sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgpublish"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
+	"net"
+	"os"
+	"testing"
 )
-
 
 func TestSetThresholdFromEnv(t *testing.T) {
 	assert.Equal(t, defaultFeedThreshold, FeedThreshold)
@@ -69,11 +68,11 @@ var processTests = []struct {
 	expectCommit      *bool
 	expectError       bool
 }{
-	{&trueVal,  &trueVal, &trueVal, &trueVal, &trueVal, &trueVal, &trueVal, noErrorExpected},
-	{&falseVal,  nil, nil, nil, nil, nil, nil, errorExpected},
+	{&trueVal, &trueVal, &trueVal, &trueVal, &trueVal, &trueVal, &trueVal, noErrorExpected},
+	{&falseVal, nil, nil, nil, nil, nil, nil, errorExpected},
 	{&trueVal, nil, nil, nil, nil, nil, &falseVal, errorExpected},
-	{&trueVal,  &falseVal, nil, nil, nil, nil, &falseVal, errorExpected},
-	{&trueVal,  &trueVal, &falseVal, nil, nil, nil, &falseVal, errorExpected},
+	{&trueVal, &falseVal, nil, nil, nil, nil, &falseVal, errorExpected},
+	{&trueVal, &trueVal, &falseVal, nil, nil, nil, &falseVal, errorExpected},
 	{&trueVal, &trueVal, &trueVal, &falseVal, nil, nil, &falseVal, errorExpected},
 	{&trueVal, &trueVal, &trueVal, &trueVal, &falseVal, nil, &falseVal, errorExpected},
 }
@@ -85,8 +84,6 @@ func testBeginSetup(mock sqlmock.Sqlmock, ok *bool) {
 		mock.ExpectBegin().WillReturnError(errors.New("sorry mate no txn for you"))
 	}
 }
-
-
 
 func testFeedIdSelectSetup(mock sqlmock.Sqlmock, ok *bool) {
 	if ok == nil {
@@ -221,7 +218,7 @@ func TestProcessEvents(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		eventMessage := pgpublish.EncodePGEvent(eventPtr.Source,eventPtr.Version,(eventPtr.Payload).([]byte),eventPtr.TypeCode)
+		eventMessage := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
 
 		err = processor.ProcessMessage(eventMessage)
 		if tt.expectError {
