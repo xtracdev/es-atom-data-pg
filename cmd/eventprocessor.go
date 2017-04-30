@@ -10,10 +10,12 @@ import (
 	"time"
 	"github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/pgconn"
+	"github.com/xtracdev/pgpublish"
 )
 
 const (
 	QueueUrlEnv = "EVENT_QUEUE_URL"
+	LogLevel="PG_ATOMDATA_LOG_LEVEL"
 )
 
 var (
@@ -40,6 +42,13 @@ func SNSMessageFromRawMessage(raw string) (*SNSMessage, error) {
 }
 
 func main() {
+	pgpublish.SetLogLevel(LogLevel)
+
+	log.Infof("Queue url: %s", queueURL)
+	if queueURL == "" {
+		log.Fatalf("%s must be specified in the environment", QueueUrlEnv)
+	}
+
 	log.Info("Connect to DB")
 	config, err := pgconn.NewEnvConfig()
 	if err != nil {
