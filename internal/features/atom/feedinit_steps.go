@@ -9,10 +9,12 @@ import (
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
+	"time"
 )
 
 func init() {
 
+	var ts = time.Now()
 	var atomProcessor *ad.AtomDataProcessor
 
 	var initFailed bool
@@ -55,7 +57,7 @@ func init() {
 			TypeCode: "foo",
 			Payload:  []byte("ok"),
 		}
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode,ts)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 	})

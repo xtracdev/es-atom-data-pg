@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestSetThresholdFromEnv(t *testing.T) {
@@ -57,6 +58,8 @@ var falseVal = false
 
 const errorExpected = true
 const noErrorExpected = false
+
+var ts = time.Now()
 
 var processTests = []struct {
 	beginOk           *bool
@@ -106,7 +109,7 @@ func testEventInsertSetup(mock sqlmock.Sqlmock, ok *bool, eventPtr *goes.Event) 
 	if *ok == true {
 		execOkResult := sqlmock.NewResult(1, 1)
 		mock.ExpectExec("insert into t_aeae_atom_event").WithArgs(
-			eventPtr.Source, eventPtr.Version, eventPtr.TypeCode, eventPtr.Payload,
+			eventPtr.Source, eventPtr.Version, eventPtr.TypeCode, eventPtr.Payload,ts,
 		).WillReturnResult(execOkResult)
 	} else {
 		mock.ExpectExec("insert into t_aeae_atom_event").WillReturnError(errors.New("BAM!"))
@@ -218,7 +221,7 @@ func TestProcessEvents(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		eventMessage := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		eventMessage := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode,ts)
 
 		err = processor.ProcessMessage(eventMessage)
 		if tt.expectError {
