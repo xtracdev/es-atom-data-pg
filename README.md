@@ -20,8 +20,6 @@ environment variable.
 
 ## Contributing
 
-## Contributing
-
 To contribute, you must certify you agree with the [Developer Certificate of Origin](http://developercertificate.org/)
 by signing your commits via `git -s`. To create a signature, configure your user name and email address in git.
 Sign with your real name, do not use pseudonyms or submit anonymous commits.
