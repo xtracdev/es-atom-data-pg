@@ -9,11 +9,12 @@ import (
 	"github.com/xtracdev/pgpublish"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
 	sqlLatestFeedId        = `select feedid from t_aefd_feed where id = (select max(id) from t_aefd_feed)`
-	sqlInsertEventIntoFeed = `insert into t_aeae_atom_event (aggregate_id, version,typecode, payload) values($1,$2,$3,$4)`
+	sqlInsertEventIntoFeed = `insert into t_aeae_atom_event (aggregate_id, version,typecode, payload, event_time) values($1,$2,$3,$4,$5)`
 	sqlRecentFeedCount     = `select count(*) from t_aeae_atom_event where feedid is null`
 	defaultFeedThreshold   = 100
 	sqlUpdateFeedIds       = `update t_aeae_atom_event set feedid = $1 where feedid is null`
@@ -39,8 +40,9 @@ func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
 	var version int
 	var payload []byte
 	var err error
+	var timestamp time.Time
 
-	aggId, version, payload, typecode, err = pgpublish.DecodePGEvent(msg)
+	aggId, version, payload, typecode, timestamp, err = pgpublish.DecodePGEvent(msg)
 	if err != nil {
 		return err
 	}
@@ -52,7 +54,7 @@ func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
 		TypeCode: typecode,
 	}
 
-	return adp.processEvent(&event)
+	return adp.processEvent(&event,timestamp)
 }
 
 func selectLatestFeed(tx *sql.Tx) (sql.NullString, error) {
@@ -86,10 +88,10 @@ func doRollback(tx *sql.Tx) {
 	}
 }
 
-func writeEventToAtomEventTable(tx *sql.Tx, event *goes.Event) error {
+func writeEventToAtomEventTable(tx *sql.Tx, event *goes.Event, ts time.Time) error {
 	log.Debug("insert event into atom_event")
 	_, err := tx.Exec(sqlInsertEventIntoFeed,
-		event.Source, event.Version, event.TypeCode, event.Payload)
+		event.Source, event.Version, event.TypeCode, event.Payload,ts)
 	return err
 }
 
@@ -156,7 +158,7 @@ func createNewFeed(tx *sql.Tx, currentFeedId sql.NullString) error {
 	return err
 }
 
-func (adp *AtomDataProcessor) processEvent(event *goes.Event) error {
+func (adp *AtomDataProcessor) processEvent(event *goes.Event, ts time.Time) error {
 	log.Debugf("process event: %v", event)
 
 	log.Debug("Processor invoked")
@@ -177,7 +179,7 @@ func (adp *AtomDataProcessor) processEvent(event *goes.Event) error {
 	log.Debugf("previous feed id is %s", feedid.String)
 
 	//Insert current row
-	err = writeEventToAtomEventTable(tx, event)
+	err = writeEventToAtomEventTable(tx, event, ts)
 	if err != nil {
 		doRollback(tx)
 		return err

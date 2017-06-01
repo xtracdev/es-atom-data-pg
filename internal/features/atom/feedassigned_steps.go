@@ -10,12 +10,14 @@ import (
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 	"os"
+	"time"
 )
 
 func init() {
 	var atomProcessor *ad.AtomDataProcessor
 	var initFailed bool
 	var feedid sql.NullString
+	var ts = time.Now()
 
 	log.Info("Init test envionment")
 	config, err := pgconn.NewEnvConfig()
@@ -54,7 +56,7 @@ func init() {
 			Payload:  []byte("ok"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode,ts)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
@@ -76,7 +78,7 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode, ts)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 	})
@@ -140,7 +142,7 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		encodedEvent := pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode, ts)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
@@ -151,7 +153,7 @@ func init() {
 			Payload:  []byte("ok?"),
 		}
 
-		encodedEvent = pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode)
+		encodedEvent = pgpublish.EncodePGEvent(eventPtr.Source, eventPtr.Version, (eventPtr.Payload).([]byte), eventPtr.TypeCode, ts)
 		err = atomProcessor.ProcessMessage(encodedEvent)
 		assert.Nil(T, err)
 
