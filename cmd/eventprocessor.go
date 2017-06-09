@@ -99,7 +99,6 @@ func main() {
 	params := &sqs.ReceiveMessageInput{
 		QueueUrl:            aws.String(queueURL), // Required
 		MaxNumberOfMessages: aws.Int64(1),
-		VisibilityTimeout:   aws.Int64(10),
 		WaitTimeSeconds:     aws.Int64(10),
 	}
 
