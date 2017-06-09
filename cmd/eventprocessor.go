@@ -38,7 +38,7 @@ func init() {
 	queueURL = os.Getenv(QueueUrlEnv)
 
 	//Initialize metrics library, kick of metrics dump go routine.
-	metrics.NewGlobal(metrics.DefaultConfig("pgpublish"), metricsSink)
+	metrics.NewGlobal(metrics.DefaultConfig("atomdata"), metricsSink)
 	pid := syscall.Getpid()
 	log.Infof("Using %d for signal pid", pid)
 	go func() {
