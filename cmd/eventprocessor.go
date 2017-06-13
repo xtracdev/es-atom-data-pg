@@ -71,6 +71,7 @@ func SNSMessageFromRawMessage(raw string) (*SNSMessage, error) {
 
 func main() {
 	pgpublish.SetLogLevel(LogLevel)
+	esatomdatapg.ReadFeedThresholdFromEnv()
 
 	log.Infof("Queue url: %s", queueURL)
 	if queueURL == "" {
