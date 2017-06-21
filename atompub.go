@@ -34,7 +34,7 @@ func NewAtomDataProcessor(db *sql.DB) *AtomDataProcessor {
 }
 
 func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
-	log.Debugf("process message %s", msg)
+	log.Infof("process message %s", msg)
 
 	var aggId, typecode string
 	var version int
@@ -54,7 +54,7 @@ func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
 		TypeCode: typecode,
 	}
 
-	return adp.processEvent(&event,timestamp)
+	return adp.processEvent(&event, timestamp)
 }
 
 func selectLatestFeed(tx *sql.Tx) (sql.NullString, error) {
@@ -91,7 +91,7 @@ func doRollback(tx *sql.Tx) {
 func writeEventToAtomEventTable(tx *sql.Tx, event *goes.Event, ts time.Time) error {
 	log.Debug("insert event into atom_event")
 	_, err := tx.Exec(sqlInsertEventIntoFeed,
-		event.Source, event.Version, event.TypeCode, event.Payload,ts)
+		event.Source, event.Version, event.TypeCode, event.Payload, ts)
 	return err
 }
 
