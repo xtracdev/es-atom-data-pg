@@ -143,7 +143,7 @@ func main() {
 
 		message := *messages[0]
 
-		loggingFields := log.Fields{"msg id": *message.MessageId}
+		loggingFields := log.Fields{"MsgId": *message.MessageId}
 
 		log.WithFields(loggingFields).Infof("Extracting SNS message from %s", *message.MessageId)
 
