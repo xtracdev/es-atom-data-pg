@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS t_aeae_atom_event(
     version NUMERIC(38,0) NOT NULL,
     typecode CHARACTER VARYING(30) NOT NULL,
     payload BYTEA,
-    primary key(id)
+    primary key(aggregate_id,version)
 )
 WITH (
     OIDS=FALSE

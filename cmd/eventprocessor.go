@@ -11,6 +11,7 @@ import (
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 	"os"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -52,7 +53,12 @@ func init() {
 
 func warnErrorf(format string, args ...interface{}) {
 	metricsSink.IncrCounter(errorCounter, 1)
-	log.Warnf(format, args)
+	log.Warnf(format, args...)
+}
+
+func warnErrorfWithFields(fields log.Fields, format string, args ...interface{}) {
+	metricsSink.IncrCounter(errorCounter, 1)
+	log.WithFields(fields).Warnf(format, args...)
 }
 
 func errorDelay() {
@@ -69,7 +75,20 @@ func SNSMessageFromRawMessage(raw string) (*SNSMessage, error) {
 	return &snsMessage, err
 }
 
+func retryMessage(err error) bool {
+
+	errorMsg := err.Error()
+	if strings.Contains(errorMsg, "duplicate key value violates unique constraint") {
+		return false
+	}
+
+	return true
+}
+
 func main() {
+
+	log.SetFormatter(&log.JSONFormatter{})
+
 	pgpublish.SetLogLevel(LogLevel)
 	esatomdatapg.ReadFeedThresholdFromEnv()
 
@@ -123,27 +142,45 @@ func main() {
 		metricsSink.IncrCounter(messagesReceived, 1)
 
 		message := *messages[0]
-		log.Debugf("Message: %v", message)
 
+		loggingFields := log.Fields{"MsgId": *message.MessageId}
+
+		log.WithFields(loggingFields).Infof("Extracting SNS message from %s", *message.MessageId)
+
+		snsMessageOK := true
 		sns, err := SNSMessageFromRawMessage(*message.Body)
 		if err != nil {
-			warnErrorf(err.Error())
-			errorDelay()
-			continue
+			snsMessageOK = false
+			warnErrorfWithFields(log.Fields{"msg id": *message.MessageId}, err.Error())
 		}
 
-		start := time.Now()
-		err = atomDataProcessor.ProcessMessage(sns.Message)
-		if err != nil {
-			warnErrorf("Error processing message: %s", err.Error())
-			continue
+		if snsMessageOK {
+			log.WithFields(loggingFields).Infof("Processing message from %s", *message.MessageId)
+
+			start := time.Now()
+			err = atomDataProcessor.ProcessMessage(sns.Message)
+			if err != nil {
+				warnErrorfWithFields(
+					loggingFields,
+					"Error processing message: %s",
+					err.Error(),
+				)
+
+				if retryMessage(err) == true {
+					continue
+				}
+			} else {
+
+				log.WithFields(loggingFields).Info("Sucessfully processed message ")
+
+			}
+			stop := time.Now()
+
+			metricsSink.IncrCounter(messagesProcessed, 1)
+			metrics.AddSample(processingTime, float32(stop.Sub(start).Nanoseconds()/1000000.0))
 		}
-		stop := time.Now()
 
-		metricsSink.IncrCounter(messagesProcessed, 1)
-		metrics.AddSample(processingTime, float32(stop.Sub(start).Nanoseconds()/1000000.0))
-
-		log.Debug("Delete message")
+		log.WithFields(loggingFields).Infof("Delete message %s", *message.MessageId)
 
 		params := &sqs.DeleteMessageInput{
 			QueueUrl:      aws.String(queueURL),
