@@ -4,6 +4,7 @@ import (
 	"errors"
 	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
+	"github.com/xtracdev/envinject"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgpublish"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
@@ -11,24 +12,23 @@ import (
 	"os"
 	"testing"
 	"time"
-	"github.com/xtracdev/envinject"
 )
 
 func TestSetThresholdFromEnv(t *testing.T) {
 	os.Unsetenv(EnvFeedThreshold)
 	os.Unsetenv(envinject.ParamPrefixEnvVar)
-	env,_ := envinject.NewInjectedEnv()
+	env, _ := envinject.NewInjectedEnv()
 	assert.Equal(t, defaultFeedThreshold, readFeedThresholdFromEnv(env))
 
 	os.Setenv(EnvFeedThreshold, "2")
-	env,_ = envinject.NewInjectedEnv()
+	env, _ = envinject.NewInjectedEnv()
 	assert.Equal(t, 2, readFeedThresholdFromEnv(env))
 }
 
 func TestSetThresholdToDefaultOnBadEnvSpec(t *testing.T) {
 	os.Setenv(EnvFeedThreshold, "two")
 	os.Unsetenv(envinject.ParamPrefixEnvVar)
-	env,_ := envinject.NewInjectedEnv()
+	env, _ := envinject.NewInjectedEnv()
 	assert.Equal(t, defaultFeedThreshold, readFeedThresholdFromEnv(env))
 	os.Setenv(EnvFeedThreshold, "2")
 }
@@ -128,7 +128,7 @@ func testThresholdCountSetup(mock sqlmock.Sqlmock, ok *bool) {
 	}
 	if *ok == true {
 		rows := sqlmock.NewRows([]string{"feedid"}).AddRow("XXX")
-		env,_ := envinject.NewInjectedEnv()
+		env, _ := envinject.NewInjectedEnv()
 		rows = sqlmock.NewRows([]string{"count(*)"}).
 			AddRow(readFeedThresholdFromEnv(env))
 		mock.ExpectQuery(`select count`).WillReturnRows(rows)
@@ -224,8 +224,8 @@ func TestProcessEvents(t *testing.T) {
 		testFeedInsertOk(mock, tt.feedInsertOk)
 		testExpectCommitSetup(mock, tt.expectCommit)
 
-		env,_ := envinject.NewInjectedEnv()
-		processor,_ := NewAtomDataProcessor(db,env)
+		env, _ := envinject.NewInjectedEnv()
+		processor, _ := NewAtomDataProcessor(db, env)
 
 		assert.Nil(t, err)
 

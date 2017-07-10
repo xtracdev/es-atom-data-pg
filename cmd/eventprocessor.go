@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/xtracdev/envinject"
 	"github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
@@ -14,7 +15,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	"github.com/xtracdev/envinject"
 )
 
 const (
@@ -90,7 +90,7 @@ func main() {
 
 	log.SetFormatter(&log.JSONFormatter{})
 
-	env,err := envinject.NewInjectedEnv()
+	env, err := envinject.NewInjectedEnv()
 	if err != nil {
 		log.Fatalf("Failed environment init: %s", err.Error())
 	}

@@ -3,14 +3,14 @@ package esatomdatapg
 import (
 	"crypto/rand"
 	"database/sql"
+	"errors"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
+	"github.com/xtracdev/envinject"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgpublish"
 	"strconv"
 	"time"
-	"github.com/xtracdev/envinject"
-	"errors"
 )
 
 const (
@@ -20,13 +20,12 @@ const (
 	defaultFeedThreshold   = 100
 	sqlUpdateFeedIds       = `update t_aeae_atom_event set feedid = $1 where feedid is null`
 	sqlInsertFeed          = `insert into t_aefd_feed (feedid, previous) values ($1, $2)`
-	EnvFeedThreshold = "FEED_THRESHOLD"
+	EnvFeedThreshold       = "FEED_THRESHOLD"
 )
 
-
 type AtomDataProcessor struct {
-	db *sql.DB
-	env *envinject.InjectedEnv
+	db            *sql.DB
+	env           *envinject.InjectedEnv
 	feedThreshold int
 }
 
@@ -38,9 +37,9 @@ func NewAtomDataProcessor(db *sql.DB, env *envinject.InjectedEnv) (*AtomDataProc
 	threshold := readFeedThresholdFromEnv(env)
 
 	return &AtomDataProcessor{
-		db: db,
-		env: env,
-		feedThreshold:threshold,
+		db:            db,
+		env:           env,
+		feedThreshold: threshold,
 	}, nil
 }
 

@@ -5,12 +5,12 @@ import (
 	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
+	"github.com/xtracdev/envinject"
 	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 	"time"
-	"github.com/xtracdev/envinject"
 )
 
 func init() {
@@ -48,7 +48,7 @@ func init() {
 	})
 
 	When(`^we start up the feed processor$`, func() {
-		atomProcessor ,_ = ad.NewAtomDataProcessor(db.DB, env)
+		atomProcessor, _ = ad.NewAtomDataProcessor(db.DB, env)
 	})
 
 	And(`^some events are published$`, func() {

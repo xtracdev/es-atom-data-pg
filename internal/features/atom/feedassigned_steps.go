@@ -5,13 +5,13 @@ import (
 	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
+	"github.com/xtracdev/envinject"
 	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
 	"os"
 	"time"
-	"github.com/xtracdev/envinject"
 )
 
 func init() {
@@ -43,8 +43,8 @@ func init() {
 		}
 
 		log.Info("Create atom pub processor")
-		atomProcessor, err = ad.NewAtomDataProcessor(db.DB,env)
-		assert.Nil(T,err)
+		atomProcessor, err = ad.NewAtomDataProcessor(db.DB, env)
+		assert.Nil(T, err)
 
 		log.Info("clean out tables")
 		_, err = db.Exec("delete from t_aeae_atom_event")
