@@ -11,6 +11,7 @@ import (
 	"github.com/xtracdev/pgpublish"
 	"os"
 	"time"
+	"github.com/xtracdev/envinject"
 )
 
 func init() {
@@ -19,14 +20,16 @@ func init() {
 	var feedid sql.NullString
 	var ts = time.Now()
 
+	os.Setenv("FEED_THRESHOLD", "2")
+
 	log.Info("Init test envionment")
-	config, err := pgconn.NewEnvConfig()
+	env, err := envinject.NewInjectedEnv()
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
 	}
 
-	db, err := pgconn.OpenAndConnect(config.ConnectString(), 1)
+	db, err := pgconn.OpenAndConnect(env, 1)
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
@@ -40,7 +43,8 @@ func init() {
 		}
 
 		log.Info("Create atom pub processor")
-		atomProcessor = ad.NewAtomDataProcessor(db.DB)
+		atomProcessor, err = ad.NewAtomDataProcessor(db.DB,env)
+		assert.Nil(T,err)
 
 		log.Info("clean out tables")
 		_, err = db.Exec("delete from t_aeae_atom_event")
@@ -66,10 +70,6 @@ func init() {
 		if initFailed {
 			return
 		}
-
-		os.Setenv("FEED_THRESHOLD", "2")
-		ad.ReadFeedThresholdFromEnv()
-		assert.Equal(T, 2, ad.FeedThreshold)
 
 		eventPtr := &goes.Event{
 			Source:   "agg2",

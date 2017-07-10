@@ -11,20 +11,26 @@ import (
 	"os"
 	"testing"
 	"time"
+	"github.com/xtracdev/envinject"
 )
 
 func TestSetThresholdFromEnv(t *testing.T) {
-	assert.Equal(t, defaultFeedThreshold, FeedThreshold)
-	os.Setenv("FEED_THRESHOLD", "2")
-	ReadFeedThresholdFromEnv()
-	assert.Equal(t, 2, FeedThreshold)
+	os.Unsetenv(EnvFeedThreshold)
+	os.Unsetenv(envinject.ParamPrefixEnvVar)
+	env,_ := envinject.NewInjectedEnv()
+	assert.Equal(t, defaultFeedThreshold, readFeedThresholdFromEnv(env))
+
+	os.Setenv(EnvFeedThreshold, "2")
+	env,_ = envinject.NewInjectedEnv()
+	assert.Equal(t, 2, readFeedThresholdFromEnv(env))
 }
 
 func TestSetThresholdToDefaultOnBadEnvSpec(t *testing.T) {
-	os.Setenv("FEED_THRESHOLD", "two")
-	ReadFeedThresholdFromEnv()
-	assert.Equal(t, defaultFeedThreshold, FeedThreshold)
-	os.Setenv("FEED_THRESHOLD", "2")
+	os.Setenv(EnvFeedThreshold, "two")
+	os.Unsetenv(envinject.ParamPrefixEnvVar)
+	env,_ := envinject.NewInjectedEnv()
+	assert.Equal(t, defaultFeedThreshold, readFeedThresholdFromEnv(env))
+	os.Setenv(EnvFeedThreshold, "2")
 }
 
 func TestReadPreviousFeedIdScanError(t *testing.T) {
@@ -122,8 +128,9 @@ func testThresholdCountSetup(mock sqlmock.Sqlmock, ok *bool) {
 	}
 	if *ok == true {
 		rows := sqlmock.NewRows([]string{"feedid"}).AddRow("XXX")
+		env,_ := envinject.NewInjectedEnv()
 		rows = sqlmock.NewRows([]string{"count(*)"}).
-			AddRow(FeedThreshold)
+			AddRow(readFeedThresholdFromEnv(env))
 		mock.ExpectQuery(`select count`).WillReturnRows(rows)
 	} else {
 		mock.ExpectQuery(`select count`).WillReturnError(errors.New("BAM!"))
@@ -217,7 +224,8 @@ func TestProcessEvents(t *testing.T) {
 		testFeedInsertOk(mock, tt.feedInsertOk)
 		testExpectCommitSetup(mock, tt.expectCommit)
 
-		processor := NewAtomDataProcessor(db)
+		env,_ := envinject.NewInjectedEnv()
+		processor,_ := NewAtomDataProcessor(db,env)
 
 		assert.Nil(t, err)
 
