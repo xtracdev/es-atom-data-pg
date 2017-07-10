@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"github.com/xtracdev/envinject"
 )
 
 const (
@@ -89,8 +90,12 @@ func main() {
 
 	log.SetFormatter(&log.JSONFormatter{})
 
-	pgpublish.SetLogLevel(LogLevel)
-	esatomdatapg.ReadFeedThresholdFromEnv()
+	env,err := envinject.NewInjectedEnv()
+	if err != nil {
+		log.Fatalf("Failed environment init: %s", err.Error())
+	}
+
+	pgpublish.SetLogLevel(LogLevel, env)
 
 	log.Infof("Queue url: %s", queueURL)
 	if queueURL == "" {
@@ -98,12 +103,7 @@ func main() {
 	}
 
 	log.Info("Connect to DB")
-	config, err := pgconn.NewEnvConfig()
-	if err != nil {
-		log.Fatalf("Failed environment init: %s", err.Error())
-	}
-
-	postgressConnection, err := pgconn.OpenAndConnect(config.ConnectString(), 100)
+	postgressConnection, err := pgconn.OpenAndConnect(env, 100)
 	if err != nil {
 		log.Fatalf("Failed environment init: %s", err.Error())
 	}
@@ -122,7 +122,10 @@ func main() {
 		WaitTimeSeconds:     aws.Int64(10),
 	}
 
-	atomDataProcessor = esatomdatapg.NewAtomDataProcessor(postgressConnection.DB)
+	atomDataProcessor, err = esatomdatapg.NewAtomDataProcessor(postgressConnection.DB, env)
+	if err != nil {
+		log.Fatalf("Unable to instantiate atom processor: %s", err.Error())
+	}
 
 	log.Info("Process messages")
 	for {
