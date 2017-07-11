@@ -3,10 +3,11 @@ package esatomdatapg
 import (
 	"database/sql"
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/DATA-DOG/go-sqlmock.v1"
 )
 
 func TestQueryForRecent(t *testing.T) {

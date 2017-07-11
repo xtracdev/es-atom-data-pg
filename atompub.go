@@ -3,13 +3,15 @@ package esatomdatapg
 import (
 	"crypto/rand"
 	"database/sql"
+	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
-	"github.com/xtracdev/goes"
-	"github.com/xtracdev/pgpublish"
-	"os"
 	"strconv"
 	"time"
+
+	log "github.com/Sirupsen/logrus"
+	"github.com/xtracdev/envinject"
+	"github.com/xtracdev/goes"
+	"github.com/xtracdev/pgpublish"
 )
 
 const (
@@ -19,18 +21,27 @@ const (
 	defaultFeedThreshold   = 100
 	sqlUpdateFeedIds       = `update t_aeae_atom_event set feedid = $1 where feedid is null`
 	sqlInsertFeed          = `insert into t_aefd_feed (feedid, previous) values ($1, $2)`
+	EnvFeedThreshold       = "FEED_THRESHOLD"
 )
 
-var FeedThreshold = defaultFeedThreshold
-
 type AtomDataProcessor struct {
-	db *sql.DB
+	db            *sql.DB
+	env           *envinject.InjectedEnv
+	feedThreshold int
 }
 
-func NewAtomDataProcessor(db *sql.DB) *AtomDataProcessor {
-	return &AtomDataProcessor{
-		db: db,
+func NewAtomDataProcessor(db *sql.DB, env *envinject.InjectedEnv) (*AtomDataProcessor, error) {
+	if env == nil {
+		return nil, errors.New("Nil injected env")
 	}
+
+	threshold := readFeedThresholdFromEnv(env)
+
+	return &AtomDataProcessor{
+		db:            db,
+		env:           env,
+		feedThreshold: threshold,
+	}, nil
 }
 
 func (adp *AtomDataProcessor) ProcessMessage(msg string) error {
@@ -114,24 +125,26 @@ func uuid() (string, error) {
 
 }
 
-func ReadFeedThresholdFromEnv() {
-	thresholdOverride := os.Getenv("FEED_THRESHOLD")
-	if thresholdOverride != "" {
-		threshold, err := strconv.Atoi(thresholdOverride)
-		if err != nil {
-			log.Warnf("Attempted to override threshold with non integer: %s", thresholdOverride)
-			log.Warnf("Defaulting to %d", defaultFeedThreshold)
-			FeedThreshold = defaultFeedThreshold
-			return
-		}
-
-		log.Infof("Overriding default feed threshold with %d", threshold)
-		FeedThreshold = threshold
+func readFeedThresholdFromEnv(env *envinject.InjectedEnv) int {
+	thresholdOverride := env.Getenv(EnvFeedThreshold)
+	if thresholdOverride == "" {
+		return defaultFeedThreshold
 	}
+
+	override, err := strconv.Atoi(thresholdOverride)
+	if err != nil {
+		log.Warnf("Attempted to override threshold with non integer: %s", thresholdOverride)
+		log.Warnf("Defaulting to %d", defaultFeedThreshold)
+		return defaultFeedThreshold
+	}
+
+	log.Infof("Overriding default feed threshold with %d", override)
+	return override
+
 }
 
 func createNewFeed(tx *sql.Tx, currentFeedId sql.NullString) error {
-	log.Infof("Feed threshold of %d met", FeedThreshold)
+
 	var prevFeedId sql.NullString
 	uuidStr, err := uuid()
 	if err != nil {
@@ -194,7 +207,8 @@ func (adp *AtomDataProcessor) processEvent(event *goes.Event, ts time.Time) erro
 	log.Debugf("current count is %d", count)
 
 	//Threshold met
-	if count == FeedThreshold {
+	if count == adp.feedThreshold {
+		log.Infof("Feed threshold of %d met", adp.feedThreshold)
 		err := createNewFeed(tx, feedid)
 		if err != nil {
 			doRollback(tx)

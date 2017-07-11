@@ -2,14 +2,16 @@ package atom
 
 import (
 	"database/sql"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
+	"github.com/xtracdev/envinject"
 	ad "github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
-	"time"
 )
 
 func init() {
@@ -19,13 +21,13 @@ func init() {
 
 	var initFailed bool
 	log.Info("Init test envionment")
-	config, err := pgconn.NewEnvConfig()
+	env, err := envinject.NewInjectedEnv()
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
 	}
 
-	db, err := pgconn.OpenAndConnect(config.ConnectString(), 1)
+	db, err := pgconn.OpenAndConnect(env, 1)
 	if err != nil {
 		log.Warnf("Failed environment init: %s", err.Error())
 		initFailed = true
@@ -47,7 +49,7 @@ func init() {
 	})
 
 	When(`^we start up the feed processor$`, func() {
-		atomProcessor = ad.NewAtomDataProcessor(db.DB)
+		atomProcessor, _ = ad.NewAtomDataProcessor(db.DB, env)
 	})
 
 	And(`^some events are published$`, func() {
