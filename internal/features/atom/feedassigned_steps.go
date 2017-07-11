@@ -2,6 +2,9 @@ package atom
 
 import (
 	"database/sql"
+	"os"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	. "github.com/gucumber/gucumber"
 	"github.com/stretchr/testify/assert"
@@ -10,8 +13,6 @@ import (
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
-	"os"
-	"time"
 )
 
 func init() {

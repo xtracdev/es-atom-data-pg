@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/xtracdev/envinject"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgpublish"
-	"strconv"
-	"time"
 )
 
 const (

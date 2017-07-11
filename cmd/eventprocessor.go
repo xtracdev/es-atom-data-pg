@@ -2,6 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+	"strings"
+	"syscall"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/armon/go-metrics"
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,10 +16,6 @@ import (
 	"github.com/xtracdev/es-atom-data-pg"
 	"github.com/xtracdev/pgconn"
 	"github.com/xtracdev/pgpublish"
-	"os"
-	"strings"
-	"syscall"
-	"time"
 )
 
 const (

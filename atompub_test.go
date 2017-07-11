@@ -2,16 +2,17 @@ package esatomdatapg
 
 import (
 	"errors"
+	"net"
+	"os"
+	"testing"
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/xtracdev/envinject"
 	"github.com/xtracdev/goes"
 	"github.com/xtracdev/pgpublish"
 	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-	"net"
-	"os"
-	"testing"
-	"time"
 )
 
 func TestSetThresholdFromEnv(t *testing.T) {
